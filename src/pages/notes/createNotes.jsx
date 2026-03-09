@@ -418,7 +418,7 @@ const CreateReceiveNote = () => {
             payload: stockPayload,
           });
           notification.warning({
-            message: 'Peringatan Stok',
+            message: 'Peringatan Stock',
             description: `Gagal memperbarui stok untuk produk ${product.product_name}: ${stockResult.message}`,
           });
           allStockUpdatesSuccessful = false;
