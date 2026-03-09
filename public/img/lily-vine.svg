@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80" height="600" viewBox="0 0 80 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <!-- Main vine -->
+    <path d="M40 600 Q30 500 40 400 Q50 300 40 200 Q30 100 40 0" stroke="#06b6d4" stroke-width="4" fill="none"/>
+    <!-- Leaves -->
+    <path d="M32 520 Q28 510 36 500 Q44 510 40 520 Z" fill="#22d3ee"/>
+    <path d="M48 480 Q44 470 52 460 Q60 470 56 480 Z" fill="#22d3ee"/>
+    <path d="M30 350 Q26 340 34 330 Q42 340 38 350 Z" fill="#22d3ee"/>
+    <path d="M50 250 Q46 240 54 230 Q62 240 58 250 Z" fill="#22d3ee"/>
+    <path d="M32 120 Q28 110 36 100 Q44 110 40 120 Z" fill="#22d3ee"/>
+    <!-- Lily flowers (stylized, with petals) -->
+    <g>
+      <!-- Top flower -->
+      <g>
+        <ellipse cx="40" cy="570" rx="10" ry="5" fill="#a7f3d0"/>
+        <path d="M40 570 Q38 560 40 550 Q42 560 40 570 Z" fill="#06b6d4"/>
+        <path d="M40 570 Q42 560 44 555 Q46 560 44 570 Z" fill="#06b6d4"/>
+        <path d="M40 570 Q38 560 36 555 Q34 560 36 570 Z" fill="#06b6d4"/>
+        <circle cx="40" cy="570" r="2" fill="#0e7490"/>
+      </g>
+      <!-- Middle flower -->
+      <g>
+        <ellipse cx="40" cy="370" rx="10" ry="5" fill="#a7f3d0"/>
+        <path d="M40 370 Q38 360 40 350 Q42 360 40 370 Z" fill="#06b6d4"/>
+        <path d="M40 370 Q42 360 44 355 Q46 360 44 370 Z" fill="#06b6d4"/>
+        <path d="M40 370 Q38 360 36 355 Q34 360 36 370 Z" fill="#06b6d4"/>
+        <circle cx="40" cy="370" r="2" fill="#0e7490"/>
+      </g>
+      <!-- Bottom flower -->
+      <g>
+        <ellipse cx="40" cy="170" rx="10" ry="5" fill="#a7f3d0"/>
+        <path d="M40 170 Q38 160 40 150 Q42 160 40 170 Z" fill="#06b6d4"/>
+        <path d="M40 170 Q42 160 44 155 Q46 160 44 170 Z" fill="#06b6d4"/>
+        <path d="M40 170 Q38 160 36 155 Q34 160 36 170 Z" fill="#06b6d4"/>
+        <circle cx="40" cy="170" r="2" fill="#0e7490"/>
+      </g>
+    </g>
+  </g>
+</svg> 

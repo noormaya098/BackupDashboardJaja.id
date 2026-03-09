@@ -1,0 +1,9 @@
+.custom-number-input input::-webkit-outer-spin-button,
+.custom-number-input input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.custom-number-input input[type='number'] {
+    -moz-appearance: textfield;
+}

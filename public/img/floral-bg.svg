@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g opacity="0.18">
+    <!-- Lily petal -->
+    <path d="M60 10 Q70 40 60 70 Q50 40 60 10Z" fill="#06b6d4"/>
+    <ellipse cx="60" cy="70" rx="8" ry="18" fill="#06b6d4" />
+    <!-- Leaves -->
+    <path d="M60 70 Q80 90 100 110 Q70 100 60 70Z" fill="#22d3ee"/>
+    <path d="M60 70 Q40 90 20 110 Q50 100 60 70Z" fill="#22d3ee"/>
+    <!-- Stem -->
+    <rect x="57" y="70" width="6" height="30" rx="3" fill="#06b6d4"/>
+  </g>
+</svg> 

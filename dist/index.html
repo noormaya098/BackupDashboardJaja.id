@@ -1,0 +1,243 @@
+<!-- 
+=========================================================
+* Material Tailwind Dashboard React - v2.1.0
+=========================================================
+* Product Page: https://www.creative-tim.com/product/material-tailwind-dashboard-react
+* Copyright 2023 Creative Tim (https://www.creative-tim.com)
+* Licensed under MIT (https://github.com/creativetimofficial/material-tailwind-dashboard-react/blob/main/LICENSE.md)
+* Coded by Creative Tim
+=========================================================
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- <link rel="icon" type="image/svg+xml" href="/img/logo-mini.png" /> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Cache Control Meta Tags -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  
+  <title>Dashboard Jaja Usaha Laku</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Fail-Safe for Blank Space -->
+  <script>
+    (function() {
+      console.log("Jaja Dashboard Index.html loading...");
+      
+      // Force unregister ALL Service Workers on localhost to prevent cross-project interference
+      if (window.location.hostname === 'localhost') {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            for(let reg of regs) {
+              reg.unregister();
+              console.warn("Unregistered rogue SW on localhost:", reg.scope);
+            }
+          });
+        }
+      }
+
+      // Detect app load failure
+      window.loadTimeout = setTimeout(function() {
+        const root = document.getElementById('root');
+        // Check if root exists and is still showing our loader after 8s
+        const isStillLoading = root && root.querySelector('.initial-loader');
+        const isBlank = root && root.innerHTML.trim() === '';
+
+        if (isStillLoading || isBlank) {
+          console.error("App render timeout 8s");
+          if (confirm('Aplikasi (Jaja Dashboard) gagal memuat dengan benar. Tekan OK untuk membersihkan cache browser secara paksa?')) {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.reload(true);
+          }
+        }
+      }, 8000);
+    })();
+  </script>
+
+  <!-- Nepcha Analytics (nepcha.com) -->
+  <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
+  <script type="module" crossorigin src="/assets/index-f5d7c08c.js"></script>
+  <link rel="stylesheet" href="/assets/index-8d6a5475.css">
+</head>
+
+<body>
+  <div id="root">
+    <!-- Premium Jaja Dashboard Loader -->
+    <style>
+      :root {
+        --jaja-blue: #2563eb;
+        --jaja-dark: #1e3a8a;
+        --jaja-light: #eff6ff;
+        --glass: rgba(255, 255, 255, 0.85);
+      }
+      
+      .jaja-loader-wrapper {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: radial-gradient(circle at top left, #f8fafc, #eff6ff);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        overflow: hidden;
+        z-index: 9999;
+      }
+
+      /* Animated Background Orbs */
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.15;
+        z-index: 0;
+        animation: orb-move 20s infinite alternate;
+      }
+      .orb-1 { width: 400px; height: 400px; background: var(--jaja-blue); top: -100px; right: -100px; }
+      .orb-2 { width: 300px; height: 300px; background: #60a5fa; bottom: -50px; left: -50px; animation-delay: -5s; }
+
+      @keyframes orb-move {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 100px); }
+      }
+
+      /* Loader Container */
+      .loader-content {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 3rem;
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 420px;
+        animation: content-in 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes content-in {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      /* Logo/Icon Animation */
+      .loader-icon-box {
+        width: 80px;
+        height: 80px;
+        background: white;
+        margin: 0 auto 2rem;
+        border-radius: 22px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.2);
+        position: relative;
+      }
+
+      .loader-pulse {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 22px;
+        border: 2px solid var(--jaja-blue);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.5; }
+        100% { transform: scale(1.6); opacity: 0; }
+      }
+
+      .jaja-logo-text {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--jaja-blue);
+        margin: 0;
+      }
+
+      /* Progress Elements */
+      .loader-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--jaja-dark);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.025em;
+      }
+
+      .loader-subtitle {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 2.5rem;
+      }
+
+      .progress-container {
+        width: 100%;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 100px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 30%;
+        background: linear-gradient(90deg, #2563eb, #60a5fa);
+        border-radius: 100px;
+        animation: loading 2.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+
+      @keyframes loading {
+        0% { width: 0%; transform: translateX(-100%); }
+        50% { width: 100%; transform: translateX(0); }
+        100% { width: 0%; transform: translateX(100%); }
+      }
+
+      .loading-status {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--jaja-blue);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+    </style>
+
+    <div class="jaja-loader-wrapper">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      
+      <div class="loader-content">
+        <div class="loader-icon-box">
+          <div class="loader-pulse"></div>
+          <span class="jaja-logo-text">J</span>
+        </div>
+        
+        <h1 class="loader-title">Dashboard Jaja</h1>
+        <p class="loader-subtitle">Menyiapkan lingkungan kerja Anda...</p>
+        
+        <div class="progress-container">
+          <div class="progress-bar"></div>
+        </div>
+        
+        <div class="loading-status">Sinkronisasi Data</div>
+      </div>
+    </div>
+  </div>
+  
+</body>
+
+</html>
