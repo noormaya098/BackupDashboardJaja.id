@@ -11,6 +11,7 @@ import {
 import LogoJaja from '../../../assets/LogoJaja.png';
 import JajaAuto from '../../../assets/JajaAuto.png';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -139,20 +140,8 @@ const PengajuanPembelian = () => {
       ];
       setApprovals(approvalList);
 
-      const productResponse = await fetch(`${baseUrl}/nimda/master_product?limit=500000`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!productResponse.ok) {
-        throw new Error('Failed to fetch product data');
-      }
-
-      const productResult = await productResponse.json();
-      setProducts(productResult.data);
+      const allProducts = await fetchAllProducts(token);
+      setProducts(allProducts);
     } catch (error) {
       console.error('Error fetching data:', error);
       message.error('Gagal mengambil data');

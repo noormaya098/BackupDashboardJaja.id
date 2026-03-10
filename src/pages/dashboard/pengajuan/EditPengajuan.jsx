@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 
 import 'dayjs/locale/id'; // Optional: for Indonesian locale
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 dayjs.locale('id');
 
 const { Option } = Select;
@@ -154,30 +155,18 @@ const EditPengajuan = () => {
       }
     };
 
-    const fetchAllProducts = async () => {
+    const fetchProducts = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(
-          `${baseUrl}/nimda/master_product?limit=500000`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `${token}`,
-            },
-          }
-        );
-        const result = await response.json();
-        if (result.code === 200) {
-          setProducts(result.data);
-        }
+        const allProducts = await fetchAllProducts(token);
+        setProducts(allProducts);
       } catch (error) {
         console.error('Error fetching products:', error);
       }
     };
 
     fetchAllVendors();
-    fetchAllProducts();
+    fetchProducts();
   }, []);
 
   const onFinish = async (values) => {

@@ -1,84 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Table, InputNumber, notification } from 'antd';
+import { Modal, Table, InputNumber, notification, Tag, Tooltip, Badge, Space } from 'antd';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts as fetchAllProductsUtil } from '@/utils/productUtils';
 
 const ProductSelectionModal = ({ visible, onCancel, onOk, products, isDirect, tb_delivery_orders = [] }) => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [productData, setProductData] = useState([]);
+  const [fifoPreview, setFifoPreview] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
       fetchAllProducts();
+      fetchFifoPreview();
     }
   }, [visible, products, isDirect]);
+
+  const fetchFifoPreview = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const payload = {
+        details: products.map(p => ({
+          id_product: isDirect ? p.id : p.id_detail,
+          qty_request: p.qty === 0 ? 1 : p.qty
+        }))
+      };
+
+      const response = await fetch(`${baseUrl}/nimda/fifo-stock/preview-deduction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setFifoPreview(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching FIFO preview:', error);
+    }
+  };
 
   const fetchAllProducts = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `${baseUrl}/nimda/master_product?limit=50000`,
-        {
-          method: 'GET',
-          redirect: 'follow',
-        }
-      );
-      const result = await response.json();
-      if (result.code === 200) {
-        const allProducts = result.data;
-        console.log('API Products (IDs 1-5):', allProducts.filter(p => [1, 2, 3, 4, 5].includes(parseInt(p.id))));
-        const updatedProducts = products.map((p, index) => {
-          const apiProduct = allProducts.find(
-            ap => ap.id === (isDirect ? p.id : p.id_detail)
-          );
-          const stock = apiProduct ? apiProduct.stock : 0;
-          console.log(`Product ID: ${p.id}, Name: ${p.name}, Stock: ${stock}, Description: ${p.product_description}`);
-          const isTenor = p.product_description?.toLowerCase().includes('tenor');
-          const displayQty = isTenor ? p.qty : p.qty === 0 ? 1 : p.qty;
-          return {
-            ...p,
-            id_transaksi_direct: p.id_transaksi_direct,
-            originalQty: p.qty,
-            stock,
-            qty: displayQty,
-            discount: p.discount || 0,
-            discount_type: p.discount_type || 'percent',
-            amount:
-              p.discount_type === 'percent'
-                ? p.price * displayQty * (1 - (p.discount || 0) / 100)
-                : p.price * displayQty - (p.discount || 0),
-            uniqueKey: `${p.id}-${index}`,
-            product_description: p.product_description || 'Tidak ada deskripsi',
-          };
-        });
-        setProductData(updatedProducts);
-      } else {
-        notification.error({
-          message: 'Error',
-          description: 'Gagal mengambil data stok produk dari API',
-        });
-        setProductData(
-          products.map((p, index) => {
-            const isTenor = p.product_description?.toLowerCase().includes('tenor');
-            const displayQty = isTenor ? p.qty : p.qty === 0 ? 1 : p.qty;
-            return {
-              ...p,
-              id_transaksi_direct: p.id_transaksi_direct,
-              originalQty: p.qty,
-              stock: 0,
-              qty: displayQty,
-              discount: p.discount || 0,
-              discount_type: p.discount_type || 'percent',
-              amount:
-                p.discount_type === 'percent'
-                  ? p.price * displayQty * (1 - (p.discount || 0) / 100)
-                  : p.price * displayQty - (p.discount || 0),
-              uniqueKey: `${p.id}-${index}`,
-              product_description: p.product_description || 'Tidak ada deskripsi',
-            };
-          })
+      const token = localStorage.getItem('token');
+      const allProducts = await fetchAllProductsUtil(token);
+      console.log('API Products (IDs 1-5):', allProducts.filter(p => [1, 2, 3, 4, 5].includes(parseInt(p.id))));
+      const updatedProducts = products.map((p, index) => {
+        const apiProduct = allProducts.find(
+          ap => ap.id === (isDirect ? p.id : p.id_detail)
         );
-      }
+        const stock = apiProduct ? apiProduct.stock : 0;
+        console.log(`Product ID: ${p.id}, Name: ${p.name}, Stock: ${stock}, Description: ${p.product_description}`);
+        const isTenor = p.product_description?.toLowerCase().includes('tenor');
+        const displayQty = isTenor ? p.qty : p.qty === 0 ? 1 : p.qty;
+        return {
+          ...p,
+          id_transaksi_direct: p.id_transaksi_direct,
+          originalQty: p.qty,
+          stock,
+          qty: displayQty,
+          discount: p.discount || 0,
+          discount_type: p.discount_type || 'percent',
+          amount:
+            p.discount_type === 'percent'
+              ? p.price * displayQty * (1 - (p.discount || 0) / 100)
+              : p.price * displayQty - (p.discount || 0),
+          uniqueKey: `${p.id}-${index}`,
+          product_description: p.product_description || 'Tidak ada deskripsi',
+        };
+      });
+      setProductData(updatedProducts);
     } catch (error) {
       console.error('Error processing products:', error);
       notification.error({
@@ -191,34 +189,77 @@ const ProductSelectionModal = ({ visible, onCancel, onOk, products, isDirect, tb
       ),
     },
     {
-      title: 'Stok',
+      title: <span className="text-gray-600 font-semibold">Stok</span>,
       dataIndex: 'stock',
       key: 'stock',
+      align: 'center',
       responsive: ['sm'],
       render: (stock, record) => {
         const isTenor = record.product_description?.toLowerCase().includes('tenor');
         const isSpecialProduct = [1, 2, 3, 4, 5].includes(parseInt(record.id));
         const stockValue = parseInt(stock) || 0;
-        // Check if there's an existing DO for this product_id
         const hasDO = tb_delivery_orders.some(doItem =>
           doItem.tb_delivery_order_details?.some(
             detail => String(detail.product_id) === String(record.id)
           )
         );
-        const isTenorWithDO = isTenor && hasDO;
-        console.log(
-          `Product ID: ${record.id}, Name: ${record.name}, Stock: ${stockValue}, IsTenor: ${isTenor}, IsSpecial: ${isSpecialProduct}, HasDO: ${hasDO}, IsTenorWithDO: ${isTenorWithDO}`
-        );
+        const isSufficient = isTenor && hasDO || isSpecialProduct || stockValue > 0;
+
         return (
-          <span>
-            {isTenorWithDO || isSpecialProduct || stockValue > 0 ? (
-              <span style={{ color: 'green', fontSize: '20px' }}>✅</span>
-            ) : (
-              <span style={{ color: 'red', fontSize: '20px' }}>❌</span>
-            )}
-          </span>
+          <Tooltip title={isSufficient ? 'Stok Tersedia' : 'Stok Habis'}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto ${isSufficient ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>
+              {isSufficient ? '✓' : '✕'}
+            </div>
+          </Tooltip>
         );
       },
+    },
+    {
+      title: <span className="text-gray-600 font-semibold">Vendor</span>,
+      key: 'fifo_preview',
+      align: 'center',
+      responsive: ['md'],
+      render: (_, record) => {
+        const fifoItem = fifoPreview.find(f => String(f.id_product) === String(record.id));
+        if (!fifoItem) return <span className="text-gray-300 italic text-[10px]">No data</span>;
+
+        return (
+          <div className={`p-2.5 rounded-xl border w-full max-w-[170px] mx-auto text-left shadow-sm transition-all hover:shadow-md ${fifoItem.is_sufficient ? 'bg-green-50/30 border-green-100' : 'bg-red-50/30 border-red-100'}`}>
+            <div className="flex justify-between items-center mb-2.5">
+              <Tag color={fifoItem.is_sufficient ? 'green' : 'volcano'} className="m-0 text-[10px] font-bold px-2 rounded-full border-none shadow-sm">
+                {fifoItem.is_sufficient ? 'CUKUP' : 'KURANG'}
+              </Tag>
+              <div className="flex items-center space-x-1 bg-white/60 px-1.5 py-0.5 rounded-md border border-white/80">
+                <span className={`text-[11px] font-bold ${fifoItem.is_sufficient ? 'text-green-600' : 'text-red-600'}`}>
+                  {fifoItem.qty_fulfilled}
+                </span>
+                <span className="text-[10px] text-gray-400">/</span>
+                <span className="text-[11px] text-gray-500 font-bold">{fifoItem.qty_total_request}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {fifoItem.allocations?.map((a, i) => (
+                <div key={i} className={`relative pl-3 ${i > 0 ? 'pt-2 border-t border-gray-100/50' : ''}`}>
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1 bg-blue-400 rounded-full animate-pulse" />
+                  <div className="text-[10px] text-gray-800 font-bold truncate leading-tight" title={a.vendor_name}>
+                    {a.vendor_name}
+                  </div>
+                  <div className="text-[9px] text-blue-600 font-medium flex items-center mt-1">
+                    <span className="mr-1">📦</span> {a.source_rn}
+                  </div>
+                </div>
+              ))}
+
+              {!fifoItem.allocations?.length && (
+                <div className="py-2 text-center">
+                  <span className="text-[10px] text-gray-400 font-medium italic">Tidak ada alokasi</span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
     },
     {
       title: 'Qty',
@@ -273,44 +314,61 @@ const ProductSelectionModal = ({ visible, onCancel, onOk, products, isDirect, tb
   return (
     <Modal
       title={
-        <div className="flex items-center text-gray-700 text-base">
-          <span className="mr-2">🛒</span>
-          Pilih Produks
+        <div className="flex items-center space-x-3 py-1">
+          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-xl shadow-inner">
+            🛒
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 m-0">Pilih Produk</h3>
+            <p className="text-xs text-gray-400 font-normal m-0">Silakan pilih produk dan tentukan jumlahnya</p>
+          </div>
         </div>
       }
       open={visible}
       onCancel={onCancel}
-      width="90vw"
-      className="max-w-[2000px] mx-auto"
+      width="95vw"
+      style={{ top: 20 }}
+      className="max-w-[1400px]"
+      bodyStyle={{ padding: '20px' }}
       footer={[
-        <button
-          key="back"
-          onClick={onCancel}
-          className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
-        >
-          Batal
-        </button>,
-        <button
-          key="submit"
-          onClick={() => {
-            if (selectedProducts.length === 0) {
-              notification.error({
-                message: 'Tidak Ada Produk Dipilih',
-                description: 'Harap pilih produk',
-              });
-              return;
-            }
-            const finalProducts = selectedProducts.map(p => ({
-              ...p,
-              qty: p.product_description?.toLowerCase().includes('tenor') ? p.qty : p.qty === 0 ? 1 : p.qty,
-            }));
-            onOk(finalProducts);
-          }}
-          className="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center text-sm"
-        >
-          <span className="mr-1">✔</span>
-          Konfirmasi
-        </button>,
+        <div key="footer" className="flex items-center justify-between w-full px-2 py-2 border-t border-gray-50 mt-4">
+          <div className="text-left">
+            <div className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Terkumpul</div>
+            <div className="flex items-baseline space-x-2">
+              <span className="text-lg font-bold text-gray-800">{selectedProducts.length}</span>
+              <span className="text-xs text-gray-400 italic">Produk</span>
+            </div>
+          </div>
+
+          <div className="flex space-x-3">
+            <button
+              onClick={onCancel}
+              className="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-semibold shadow-sm flex items-center"
+            >
+              Batal
+            </button>
+            <button
+              onClick={() => {
+                if (selectedProducts.length === 0) {
+                  notification.error({
+                    message: 'Tidak Ada Produk Dipilih',
+                    description: 'Harap pilih minimal satu produk',
+                  });
+                  return;
+                }
+                const finalProducts = selectedProducts.map(p => ({
+                  ...p,
+                  qty: p.product_description?.toLowerCase().includes('tenor') ? p.qty : p.qty === 0 ? 1 : p.qty,
+                }));
+                onOk(finalProducts);
+              }}
+              className="px-8 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all transform hover:scale-[1.02] active:scale-[0.98] text-sm font-bold shadow-lg shadow-green-200 flex items-center"
+            >
+              <span className="mr-2 text-base">✓</span>
+              Konfirmasi Pesanan
+            </button>
+          </div>
+        </div>
       ]}
     >
       <div className="overflow-x-auto">

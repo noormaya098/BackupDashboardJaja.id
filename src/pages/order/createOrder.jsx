@@ -8,6 +8,7 @@ import timezone from 'dayjs/plugin/timezone';
 import { useNavigate } from 'react-router-dom';
 import './createOrder.css';
 import { baseUrl } from "@/configs";
+import { fetchAllProducts } from '@/utils/productUtils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -140,15 +141,9 @@ const CreateOrder = () => {
         const fetchProducts = async () => {
             setFetchingProducts(true);
             try {
-                const requestOptions = { method: "GET", redirect: "follow" };
-                const response = await fetch(`${baseUrl}/nimda/master_product/?exported=1&limit=50000`, requestOptions);
-                const result = await response.json();
-                if (result.code === 200 && Array.isArray(result.data)) {
-                    setProductList(result.data);
-                } else {
-                    console.error("Data produk tidak valid:", result);
-                    setProductList([]);
-                }
+                const token = localStorage.getItem('token');
+                const allProducts = await fetchAllProducts(token, "exported=1");
+                setProductList(allProducts);
             } catch (error) {
                 console.error("Error fetching product data:", error);
                 setProductList([]);

@@ -16,6 +16,7 @@ import {
 import { DeleteOutlined, SaveOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -152,30 +153,18 @@ const PengajuanPembelianBaru = () => {
       }
     };
 
-    const fetchAllProducts = async () => {
+    const fetchProducts = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(
-          `${baseUrl}/nimda/master_product?limit=500000`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `${token}`,
-            },
-          }
-        );
-        const result = await response.json();
-        if (result.code === 200) {
-          setProductList(result.data);
-        }
+        const allProducts = await fetchAllProducts(token);
+        setProductList(allProducts);
       } catch (error) {
         console.error('Error fetching products:', error);
       }
     };
 
     fetchAllVendors();
-    fetchAllProducts();
+    fetchProducts();
   }, []);
 
   const handleVendorChange = (index, field, value) => {

@@ -5,6 +5,7 @@ import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { Title } = Typography;
 
@@ -35,19 +36,8 @@ const EditPurchaseInvoice = () => {
           throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
         }
 
-        // Fetch products
-        const productResponse = await axios.get(`${baseUrl}/nimda/master_product?limit=500000`, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `${token}`,
-          },
-        });
-
-        if (productResponse.data.code === 200) {
-          setProducts(productResponse.data.data);
-        } else {
-          throw new Error(productResponse.data.message || 'Gagal mengambil data produk.');
-        }
+        const allProducts = await fetchAllProducts(token);
+        setProducts(allProducts);
 
         // Fetch warehouses
         const warehouseResponse = await axios.get(`${baseUrl}/nimda/warehouse/get-warehouse`, {

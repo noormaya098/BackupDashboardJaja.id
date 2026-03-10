@@ -116,10 +116,9 @@ const TambahPengajuan = () => {
             description: `Pengajuan untuk Order ${normalizedData.order_id}`,
           });
 
-          // Filter produk dengan status_pengajuan: "belum_diajukan"
+          // Ambil semua produk tanpa filter status_pengajuan agar bisa diajukan berkali-kali
           const productData = normalizedData.platform === 'Direct'
             ? (normalizedData.tb_transaksi_directs || [])
-              .filter(item => item.status_pengajuan === 'belum_diajukan')
               .map((item, index) => ({
                 key: `${index + 1}`,
                 product_id: item.product_id,
@@ -154,11 +153,11 @@ const TambahPengajuan = () => {
                 tax_percentage: '11%',
               }));
 
-          // Jika productData kosong, tampilkan notifikasi
+          // Jika productData kosong sama sekali
           if (productData.length === 0) {
             notification.info({
               message: 'Informasi',
-              description: 'Tidak ada produk dengan status pengajuan "belum_diajukan".',
+              description: 'Tidak ada produk dalam pesanan ini.',
             });
           }
 
@@ -378,7 +377,7 @@ const TambahPengajuan = () => {
               navigate(`/dashboard/pengajuan/detail/${idPengajuan}`);
             } else {
               console.error('id_pengajuan tidak ditemukan dalam response');
-              navigate('/dashboard/pengajuan/detail/${idPengajuan}');
+              navigate(`/dashboard/pengajuan/detail/${idPengajuan}`);
             }
           } else {
             notification.error({

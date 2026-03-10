@@ -5,6 +5,7 @@ import { PrinterOutlined, EditOutlined, SendOutlined, PlusOutlined } from '@ant-
 import LogoJaja from '../../../assets/LogoJaja.png';
 import JajaAuto from '../../../assets/JajaAuto.png';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -111,28 +112,13 @@ const PurchaseOrderDetail = () => {
           throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
         }
 
-        // Fetch Products
-        const productResponse = await fetch(
-          `${baseUrl}/nimda/master_product?limit=500000`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `${token}`,
-            },
-          }
-        );
-        const productResult = await productResponse.json();
-        if (productResult.code === 200) {
-          const transformedProducts = productResult.data.map(product => ({
-            product_id: product.id,
-            product_name: product.name,
-            ...product
-          }));
-          setProductList(transformedProducts);
-        } else {
-          console.error('Product API Error:', productResult);
-        }
+        const allProducts = await fetchAllProducts(token);
+        const transformedProducts = allProducts.map(product => ({
+          product_id: product.id,
+          product_name: product.name,
+          ...product
+        }));
+        setProductList(transformedProducts);
 
         // Fetch Purchase Order
         const purchaseResponse = await fetch(
@@ -178,7 +164,7 @@ const PurchaseOrderDetail = () => {
               const pengajuanItem = pengajuanResult.data.tb_pengajuan_vendors[
                 pengajuanResult.data.selected
               ]?.tb_pengajuan_pilihans.find(p => p.product_id === detail.product_id);
-              const product = productResult.code === 200 ? productResult.data.find(p => p.id === detail.product_id) : null;
+              const product = allProducts.find(p => p.id === detail.product_id);
               const taxable = pengajuanItem ? pengajuanItem.taxable : detail.taxable ?? false;
               const ppn = pengajuanItem ? parseFloat(pengajuanItem.ppn) : parseFloat(detail.ppn ?? 0);
               const total_product = parseFloat(detail.total_product) || calculateTotalProduct(

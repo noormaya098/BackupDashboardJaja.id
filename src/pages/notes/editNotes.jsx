@@ -17,6 +17,7 @@ import { SaveOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -82,20 +83,8 @@ const EditReceiveNote = () => {
 
         setSelectedProducts(noteData.details || []);
 
-        const productResponse = await fetch(`${baseUrl}/nimda/master_product?limit=500000`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `${token}`,
-          },
-        });
-
-        const productResult = await productResponse.json();
-        if (productResult.code === 200) {
-          setProducts(productResult.data);
-        } else {
-          throw new Error(productResult.message || 'Gagal mengambil data produk.');
-        }
+        const allProducts = await fetchAllProducts(token);
+        setProducts(allProducts);
       } catch (error) {
         console.error('Error fetching data:', error);
         notification.error({

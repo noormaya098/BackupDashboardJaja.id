@@ -56,6 +56,7 @@ import {
 import LogoJaja from '../../assets/LogoJaja.png';
 import JajaAuto from '../../assets/JajaAuto.png';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { Title, Text } = Typography;
 
@@ -1012,31 +1013,21 @@ const OrderDetailPage = () => {
     try {
       const authHeader = getAuthHeader();
       let stockMap = {};
-      const response = await fetch(`${baseUrl}/nimda/master_product?limit=50000`, {
-        method: 'GET',
-        redirect: 'follow',
-        headers: {
-          'Accept': 'application/json',
-          ...(authHeader && { 'Authorization': authHeader })
+      const token = localStorage.getItem('token');
+      const allProducts = await fetchAllProducts(token);
+
+      allProducts.forEach((product) => {
+        const productId = String(product.id);
+        if (productIds.includes(productId)) {
+          stockMap[productId] = parseInt(product.stock) || 0;
         }
       });
-      const result = await response.json();
-      if (result.code === 200) {
-        result.data.forEach((product) => {
-          const productId = String(product.id); // Ensure product ID is a string
-          if (productIds.includes(productId)) {
-            stockMap[productId] = parseInt(product.stock) || 0;
-          }
-        });
-        setProductStock(prev => {
-          const newStock = { ...prev, ...stockMap };
-          console.log('Updated stockMap:', stockMap); // Debug stockMap
-          console.log('New productStock:', newStock); // Debug final state
-          return newStock;
-        });
-      } else {
-        console.error('API fetch failed:', result);
-      }
+      setProductStock(prev => {
+        const newStock = { ...prev, ...stockMap };
+        console.log('Updated stockMap:', stockMap); // Debug stockMap
+        console.log('New productStock:', newStock); // Debug final state
+        return newStock;
+      });
     } catch (error) {
       console.error('Error fetching product stock:', error);
       setProductStock(productIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {}));

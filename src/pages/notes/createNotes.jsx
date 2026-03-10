@@ -16,6 +16,7 @@ import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -41,21 +42,8 @@ const CreateReceiveNote = () => {
           throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
         }
 
-        // Fetch products
-        const productResponse = await fetch(`${baseUrl}/nimda/master_product?limit=500000`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `${token}`,
-          },
-        });
-
-        const productResult = await productResponse.json();
-        if (productResult.code === 200) {
-          setProducts(productResult.data);
-        } else {
-          throw new Error(productResult.message || 'Gagal mengambil data produk.');
-        }
+        const allProducts = await fetchAllProducts(token);
+        setProducts(allProducts);
 
         // Fetch warehouses
         const warehouseResponse = await fetch(`${baseUrl}/nimda/warehouse/get-warehouse`, {
@@ -381,63 +369,52 @@ const CreateReceiveNote = () => {
         throw new Error('ID receive note tidak ditemukan dalam respons API.');
       }
 
-      // Update stock for each product
-      const transactionNo = purchaseData?.transaction_no || `PO-${id_purchase_order}`;
-      const batchDate = values.receive_note_date ? values.receive_note_date.format('YYYYMMDD') : dayjs().format('YYYYMMDD');
-      let allStockUpdatesSuccessful = true;
-
-      for (const product of selectedProducts) {
-        const productData = products.find(p => p.id === product.product_id);
-        const batchCode = product.batch_code || `BCH-${batchDate}-${id_receive_note}-${product.product_id}`;
-        const stockPayload = {
-          data_id: id_receive_note,
-          product_id: product.product_id,
-          warehouse_id: parseInt(values.warehouse_id) || 3,
-          batch_code: batchCode,
-          movement_type: 'in',
-          reference: transactionNo,
-          quantity: parseInt(product.quantity) || 1,
-          unit: product.uom || productData?.unit || 'Pcs',
-          description: `Stok masuk dari ${transactionNo}`,
+      // Add FIFO Stock Batch
+      try {
+        const fifoPayload = {
+          id_receive_note: id_receive_note,
+          id_vendor: result.data?.receive_note?.id_vendor || 0,
+          details: selectedProducts.map(product => ({
+            id_product: product.product_id,
+            qty_receive: product.quantity,
+          })),
         };
 
-        const stockResponse = await fetch(`${baseUrl}/nimda/inventory/movements`, {
+        const fifoResponse = await fetch(`${baseUrl}/nimda/fifo-stock/add-batch`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `${token}`,
           },
-          body: JSON.stringify(stockPayload),
+          body: JSON.stringify(fifoPayload),
         });
 
-        const stockResult = await stockResponse.json();
-        if (!stockResponse.ok) {
-          console.error(`Gagal memperbarui stok untuk produk ${product.product_name}:`, {
-            status: stockResponse.status,
-            message: stockResult.message,
-            payload: stockPayload,
-          });
+        const fifoResult = await fifoResponse.json();
+        if (!fifoResponse.ok) {
+          console.error('Gagal menambahkan batch FIFO:', fifoResult);
           notification.warning({
-            message: 'Peringatan Stock',
-            description: `Gagal memperbarui stok untuk produk ${product.product_name}: ${stockResult.message}`,
+            message: 'Peringatan FIFO',
+            description: `Gagal menambahkan batch FIFO: ${fifoResult.message}`,
           });
-          allStockUpdatesSuccessful = false;
         } else {
-          console.log(`Stok berhasil diperbarui untuk produk ${product.product_name}:`, stockResult);
+          console.log('Batch FIFO berhasil ditambahkan:', fifoResult);
+          notification.success({
+            message: 'FIFO Stock Berhasil',
+            description: fifoResult.message || 'Stok batch berhasil dicatat.',
+          });
         }
+      } catch (fifoError) {
+        console.error('Error calling FIFO add-batch:', fifoError);
       }
 
-      if (allStockUpdatesSuccessful) {
-        notification.success({
-          message: 'Receive Note Berhasil Dibuat',
-          description: `Receive Note ${result.data?.receive_note?.receive_note_no} telah berhasil dibuat dan stok telah diperbarui.`,
-        });
-        form.resetFields();
-        setSelectedProducts([]);
-        navigate(`/dashboard/notes/detail-order/${id_receive_note}`);
-      } else {
-        throw new Error('Receive note telah dibuat, tetapi beberapa pembaruan stok gagal.');
-      }
+      // Success notification and navigation
+      notification.success({
+        message: 'Receive Note Berhasil Dibuat',
+        description: `Receive Note ${result.data?.receive_note?.receive_note_no} telah berhasil dibuat.`,
+      });
+      form.resetFields();
+      setSelectedProducts([]);
+      navigate(`/dashboard/notes/detail-order/${id_receive_note}`);
     } catch (error) {
       console.error('Error in handleSubmit:', error);
       notification.error({

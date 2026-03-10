@@ -31,6 +31,7 @@ import 'dayjs/locale/id';
 import LogoJaja from '../../../assets/LogoJaja.png';
 import LogoJajaAuto from '../../../assets/JajaAuto.png';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 moment.locale('id');
 dayjs.locale('id');
@@ -160,16 +161,11 @@ const InvoicePage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const requestOptions = { method: "GET", redirect: "follow" };
-        const response = await fetch(
-          `${baseUrl}/nimda/master_product?limit=50000`,
-          requestOptions
-        );
-        const result = await response.json();
-        if (result.code === 200 && Array.isArray(result.data)) {
-          setProductList(result.data);
+        const token = localStorage.getItem('token');
+        const allProducts = await fetchAllProducts(token);
+        if (Array.isArray(allProducts)) {
+          setProductList(allProducts);
         } else {
-          console.error("Data produk tidak valid:", result);
           setProductList([]);
         }
       } catch (error) {

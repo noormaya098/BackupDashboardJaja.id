@@ -13,6 +13,7 @@ import {
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -61,22 +62,10 @@ const EditPurchaseOrder = () => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(
-          `${baseUrl}/nimda/master_product?limit=50000`,
-          {
-            method: 'GET',
-            headers: { 'Authorization': `${token}` },
-          }
-        );
-        const result = await response.json();
-        if (result.code === 200 && Array.isArray(result.data)) {
-          setProductList(result.data);
-        } else {
-          setProductList([]);
-        }
+        const allProducts = await fetchAllProducts(token);
+        setProductList(allProducts);
       } catch (error) {
-        console.error('Error fetching product data:', error);
-        setProductList([]);
+        console.error('Error fetching products:', error);
       }
     };
     fetchProducts();

@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -80,16 +81,8 @@ const SelectProductsPageElse = () => {
 
     const fetchProductStocks = async () => {
       try {
-        const response = await fetch(
-          `${baseUrl}/nimda/master_product?limit=50000`,
-          {
-            method: 'GET',
-            redirect: 'follow',
-          }
-        );
-        const result = await response.json();
-        if (result.code === 200) {
-          const allProducts = result.data;
+        const token = localStorage.getItem('token');
+        const allProducts = await fetchAllProducts(token);
           console.log('API Products:', allProducts.filter(p => [1, 2, 3, 4, 5].includes(parseInt(p.id))));
           const initialProducts = selectedProducts.map((product, index) => {
             const apiProduct = allProducts.find(
@@ -117,9 +110,6 @@ const SelectProductsPageElse = () => {
           });
           setProducts(initialProducts);
           setSelectedRowKeys(initialProducts.map(p => p.key));
-        } else {
-          throw new Error('Failed to fetch product stock');
-        }
       } catch (error) {
         console.error('Error fetching product stock:', error);
         const initialProducts = selectedProducts.map((product, index) => {

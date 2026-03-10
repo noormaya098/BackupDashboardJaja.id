@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Input, Table, ConfigProvider, message, InputNumber, Select } from 'antd';
 import { SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -114,27 +115,11 @@ const AddDeliveryOrder = () => {
 
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
-        }
-
-        // Fetch Products
-        const productResponse = await fetch(
-          `${baseUrl}/nimda/master_product?page=1&limit=1000000&t=${Date.now()}`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: token && token.startsWith('Bearer ') ? token : `${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        const productResult = await productResponse.json();
-        console.log('Product API Response:', productResult);
-        if (productResult.code === 200 && Array.isArray(productResult.data)) {
-          setProductList(productResult.data);
+        const allProducts = await fetchAllProducts(token);
+        console.log('Product API Response:', allProducts);
+        if (Array.isArray(allProducts)) {
+          setProductList(allProducts);
         } else {
-          console.error('Product API Error:', productResult);
           setProductList([]);
         }
 

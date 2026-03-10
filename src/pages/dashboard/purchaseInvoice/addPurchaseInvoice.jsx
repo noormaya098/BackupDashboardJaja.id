@@ -4,6 +4,7 @@ import { Form, Input, Button, Table, Card, Typography, Modal, DatePicker, Checkb
 import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { Title } = Typography;
 
@@ -43,21 +44,8 @@ const AddPurchaseInvoice = () => {
           throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
         }
 
-        // Fetch products
-        const productResponse = await fetch(`${baseUrl}/nimda/master_product?limit=500000`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `${token}`,
-          },
-        });
-
-        const productResult = await productResponse.json();
-        if (productResult.code === 200) {
-          setProducts(productResult.data);
-        } else {
-          throw new Error(productResult.message || 'Gagal mengambil data produk.');
-        }
+        const allProducts = await fetchAllProducts(token);
+        setProducts(allProducts);
 
         // Fetch warehouses
         const warehouseResponse = await fetch(`${baseUrl}/nimda/warehouse/get-warehouse`, {
@@ -100,7 +88,7 @@ const AddPurchaseInvoice = () => {
 
           // Initialize invoice items from purchase order details
           const initialItems = purchaseData.purchase_order_details.map((detail) => {
-            const product = products.find((p) => p.id === detail.product_id) || {
+            const product = allProducts.find((p) => p.id === detail.product_id) || {
               name: detail.product_name || `ID ${detail.product_id} tidak ditemukan`,
             };
             return {

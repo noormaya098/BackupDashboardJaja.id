@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -68,20 +69,9 @@ const WarehouseDetail = () => {
       setLoadingInventory(true);
       try {
         // Fetch master products
-        const productResponse = await fetch(
-          `${baseUrl}/nimda/master_product?limit=50000`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        const productResult = await productResponse.json();
-        if (productResult.code !== 200) {
-          throw new Error(productResult.message || 'Gagal mengambil data produk');
-        }
-        setProducts(productResult.data);
+        const token = localStorage.getItem('token');
+        const allProducts = await fetchAllProducts(token);
+        setProducts(allProducts);
 
         // Fetch inventory movements
         const inventoryResponse = await fetch(

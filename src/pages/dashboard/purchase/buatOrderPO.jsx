@@ -14,6 +14,7 @@ import {
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { baseUrl } from '@/configs';
+import { fetchAllProducts } from '@/utils/productUtils';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -101,31 +102,13 @@ const BuatOrderPO = () => {
           });
         }
 
-        // Fetch Products
-        const productResponse = await fetch(
-          `${baseUrl}/nimda/master_product?limit=500000`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `${token}`,
-            },
-          }
-        );
-        const productResult = await productResponse.json();
-        if (productResult.code === 200) {
-          const transformedProducts = productResult.data.map(product => ({
-            product_id: product.id,
-            product_name: product.name,
-            ...product
-          }));
-          setProductList(transformedProducts);
-        } else {
-          notification.error({
-            message: 'Error',
-            description: 'Gagal mengambil data produk',
-          });
-        }
+        const allProducts = await fetchAllProducts(token);
+        const transformedProducts = allProducts.map(product => ({
+          product_id: product.id,
+          product_name: product.name,
+          ...product
+        }));
+        setProductList(transformedProducts);
 
         // Fetch Pengajuan Data
         if (id_pengajuan) {

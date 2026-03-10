@@ -703,6 +703,8 @@ const DeliveryOrderPage = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [newKomentar, setNewKomentar] = useState('');
   const [isSubmittingKomentar, setIsSubmittingKomentar] = useState(false);
+  const [fifoTrace, setFifoTrace] = useState(null);
+  const [fifoLoading, setFifoLoading] = useState(false);
 
 
   // Get user role from token (run once on mount)
@@ -803,8 +805,32 @@ const DeliveryOrderPage = () => {
   useEffect(() => {
     if (id_delivery_order) {
       fetchHistory();
+      fetchFifoTrace();
     }
   }, [id_delivery_order]);
+
+  const fetchFifoTrace = async () => {
+    if (!id_delivery_order) return;
+    setFifoLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${baseUrl}/nimda/fifo-stock/trace/${id_delivery_order}`,
+        {
+          headers: {
+            Authorization: token && token.startsWith('Bearer ') ? token : `${token}`
+          },
+        }
+      );
+      if (response.data.status === 200 || response.data.success) {
+        setFifoTrace(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching FIFO trace:', error);
+    } finally {
+      setFifoLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDeliveryOrder = async () => {
@@ -1849,6 +1875,44 @@ const DeliveryOrderPage = () => {
     },
   ];
 
+  const fifoColumns = [
+    {
+      title: 'Nama Produk',
+      dataIndex: 'product_name',
+      key: 'product_name',
+      render: text => <Text strong>{text}</Text>,
+    },
+    {
+      title: 'Source RN / Batch',
+      dataIndex: 'source_rn',
+      key: 'source_rn',
+      render: text => <Tag color="blue" className="font-bold">{text}</Tag>,
+    },
+    {
+      title: 'Tanggal RN',
+      dataIndex: 'rn_date',
+      key: 'rn_date',
+    },
+    {
+      title: 'Vendor',
+      dataIndex: 'vendor_name',
+      key: 'vendor_name',
+    },
+    {
+      title: 'Qty Keluar',
+      dataIndex: 'qty_out',
+      key: 'qty_out',
+      align: 'right',
+      render: q => <Text strong className="text-green-600">{q} Unit</Text>,
+    },
+    {
+      title: 'Waktu Transaksi',
+      dataIndex: 'out_date',
+      key: 'out_date',
+      render: date => date ? new Date(date).toLocaleString('id-ID') : '-',
+    },
+  ];
+
   return (
     <>
       <style>{responsiveStyles}</style>
@@ -2139,6 +2203,54 @@ const DeliveryOrderPage = () => {
                 pagination={false}
                 rowKey="key"
                 scroll={{ x: 'max-content' }}
+                loading={loading || fifoLoading}
+                expandable={{
+                  expandedRowRender: record => {
+                    const traceItems = (fifoTrace || []).filter(
+                      t => String(t.id_product) === String(record.key) || String(t.product_id) === String(record.key)
+                    );
+                    if (traceItems.length === 0) return <div className="p-4 text-gray-400 italic text-center bg-gray-50 rounded-lg">Tidak ada data alokasi FIFO untuk produk ini</div>;
+
+                    return (
+                      <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="mb-2 font-bold text-gray-700 flex items-center gap-2">
+                          <span className="text-lg">📜</span> Alokasi FIFO Stock
+                        </div>
+                        <Table
+                          dataSource={traceItems}
+                          pagination={false}
+                          size="small"
+                          rowKey={(r, i) => i}
+                          className="table-modern bg-white"
+                          columns={[
+                            {
+                              title: 'Source RN / Batch',
+                              dataIndex: 'source_rn',
+                              key: 'source_rn',
+                              render: t => <Tag color="processing" className="font-bold border-0 bg-blue-50 text-blue-600 rounded-md py-0.5 px-2">{t}</Tag>
+                            },
+                            {
+                              title: 'Vendor',
+                              dataIndex: 'vendor_name',
+                              key: 'vendor_name',
+                              render: t => <span className="font-medium text-gray-600">{t || '-'}</span>
+                            },
+                            {
+                              title: 'Qty Alokasi',
+                              dataIndex: 'qty_out',
+                              key: 'qty_out',
+                              align: 'right',
+                              render: q => <span className="font-bold text-green-600">{q} Unit</span>
+                            },
+                          ]}
+                        />
+                      </div>
+                    );
+                  },
+                  rowExpandable: record => (fifoTrace || []).some(
+                    t => String(t.id_product) === String(record.key) || String(t.product_id) === String(record.key)
+                  ),
+                }}
               />
             </div>
 
@@ -2188,6 +2300,8 @@ const DeliveryOrderPage = () => {
                 </div>
               </div>
             </div>
+
+
 
             {/* Lampiran modern, clean, di dalam Card utama, tanpa tombol unggah */}
             <div className="mt-10">
@@ -2296,7 +2410,7 @@ const DeliveryOrderPage = () => {
                         loading={isSubmittingKomentar}
                         disabled={!newKomentar.trim()}
                         className="rounded-lg px-6 font-semibold shadow-md"
-                        style={{ background: '#4caf50', borderColor: '#4caf50' }}
+                        style={{ background: '#4caf50', borderColor: '#4caf50', color: 'white' }}
                       >
                         Kirim Komentar
                       </Button>
@@ -2368,6 +2482,25 @@ const DeliveryOrderPage = () => {
                 />
               </div>
             </div>
+
+            {/* Jejak FIFO Stock Section */}
+            {(fifoTrace && fifoTrace.length > 0) && (
+              <div className="mt-10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-semibold text-lg tracking-wide" style={{ color: '#2c3e50' }}>📜 Riwayat Stock</span>
+                </div>
+                <div className="table-modern">
+                  <Table
+                    columns={fifoColumns}
+                    dataSource={fifoTrace}
+                    pagination={false}
+                    rowKey="id_history"
+                    className="shadow-sm border border-gray-100 rounded-xl overflow-hidden"
+                    loading={fifoLoading}
+                  />
+                </div>
+              </div>
+            )}
             {/* Modal untuk tambah Tanda Terima */}
             <Modal
               title="Tambah Tanda Terima"
